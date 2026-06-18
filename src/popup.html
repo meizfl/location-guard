@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Location Guard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #16181d;
+      --bg2:       #1e2128;
+      --bg3:       #272b34;
+      --border:    #2e333e;
+      --accent:    #4f8ef7;
+      --accent-h:  #3a7aee;
+      --green:     #3ecf8e;
+      --yellow:    #f5a623;
+      --red:       #e55353;
+      --text:      #e8eaf0;
+      --text-muted:#7a8194;
+      --radius:    10px;
+      --w:         280px;
+    }
+
+    html, body {
+      width: var(--w);
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      line-height: 1.4;
+      overflow: hidden;
+    }
+
+    /* ── Header ── */
+    #header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    #shield {
+      width: 32px; height: 32px;
+      flex-shrink: 0;
+    }
+    #header-text { flex: 1; min-width: 0; }
+    #title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #subtitle {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+      box-shadow: 0 0 6px var(--green);
+    }
+    #status-dot.paused   { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+    #status-dot.real     { background: var(--red);    box-shadow: 0 0 6px var(--red); }
+    #status-dot.fixed    { background: var(--accent);  box-shadow: 0 0 6px var(--accent); }
+
+    /* ── Level selector ── */
+    #level-section {
+      padding: 12px 16px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    #level-section.hidden { display: none; }
+
+    #level-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+    #level-domain {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    #levels {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+    }
+    .level-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px 6px;
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, transform 0.1s;
+      user-select: none;
+    }
+    .level-btn:hover { background: var(--bg3); border-color: #3d4355; }
+    .level-btn:active { transform: scale(0.96); }
+    .level-btn.active {
+      border-color: var(--accent);
+      background: #1a2540;
+    }
+    .level-btn .icon { font-size: 18px; line-height: 1; }
+    .level-btn .lbl {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .level-btn.active .lbl { color: var(--accent); }
+
+    /* fixed/real special colours */
+    .level-btn[data-level="fixed"].active { border-color: var(--accent); background: #1a2540; }
+    .level-btn[data-level="real"].active  { border-color: var(--red); background: #2a1a1a; }
+    .level-btn[data-level="real"].active .lbl { color: var(--red); }
+
+    /* ── Action list ── */
+    #actions { padding: 6px 8px 8px; }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 9px 10px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.12s;
+      text-align: left;
+    }
+    .action-btn:hover { background: var(--bg2); }
+    .action-btn:active { background: var(--bg3); }
+    .action-btn .icon {
+      font-size: 16px;
+      width: 22px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .action-btn .label { flex: 1; }
+    .action-btn .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+      background: var(--yellow);
+      color: #1a1200;
+    }
+    .action-btn.paused-btn .badge { background: var(--green); color: #001a0d; }
+
+    #hideIcon-btn { display: none; }
+
+    /* ── Level flyout ── */
+    #level-flyout {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      z-index: 10;
+      padding: 0;
+      flex-direction: column;
+    }
+    #level-flyout.open { display: flex; }
+
+    #flyout-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    #flyout-back {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 22px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+    #flyout-title {
+      font-size: 14px;
+      font-weight: 700;
+      flex: 1;
+    }
+    #flyout-domain {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+    }
+
+    #flyout-levels { padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+
+    .flyout-level-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      background: var(--bg2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color 0.12s, background 0.12s;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      text-align: left;
+    }
+    .flyout-level-btn:hover { background: var(--bg3); border-color: #3d4355; }
+    .flyout-level-btn .icon { font-size: 20px; width: 26px; text-align: center; }
+    .flyout-level-btn .info { flex: 1; }
+    .flyout-level-btn .name { font-weight: 600; }
+    .flyout-level-btn .desc { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    .flyout-level-btn .check { font-size: 16px; color: var(--accent); opacity: 0; }
+    .flyout-level-btn.active { border-color: var(--accent); background: #1a2540; }
+    .flyout-level-btn.active .check { opacity: 1; }
+    .flyout-level-btn[data-level="real"].active { border-color: var(--red); background: #2a1a1a; }
+    .flyout-level-btn[data-level="real"].active .check { color: var(--red); }
+  </style>
+</head>
+<body>
+
+<div id="main">
+
+  <!-- Header -->
+  <div id="header">
+    <img id="shield" src="images/pin_64.png" alt="">
+    <div id="header-text">
+      <div id="title">Location Guard</div>
+      <div id="subtitle">Loading…</div>
+    </div>
+    <div id="status-dot"></div>
+  </div>
+
+  <!-- Level quick-selector (shown when on a real page) -->
+  <div id="level-section">
+    <div id="level-label">Level for <span id="level-domain"></span></div>
+    <div id="levels">
+      <button class="level-btn" data-level="fixed">
+        <span class="icon">📍</span><span class="lbl">Fixed</span>
+      </button>
+      <button class="level-btn" data-level="high">
+        <span class="icon">🔒</span><span class="lbl">High</span>
+      </button>
+      <button class="level-btn" data-level="medium">
+        <span class="icon">🛡️</span><span class="lbl">Med</span>
+      </button>
+      <button class="level-btn" data-level="low">
+        <span class="icon">🔓</span><span class="lbl">Low</span>
+      </button>
+      <button class="level-btn" data-level="real">
+        <span class="icon">📡</span><span class="lbl">Real</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div id="actions">
+    <button class="action-btn" id="pause-btn">
+      <span class="icon">⏸</span>
+      <span class="label" id="pause-label">Pause Location Guard</span>
+      <span class="badge" id="pause-badge">ON</span>
+    </button>
+    <button class="action-btn" id="hideIcon-btn">
+      <span class="icon">👁</span>
+      <span class="label">Hide icon</span>
+    </button>
+    <button class="action-btn" id="options-btn">
+      <span class="icon">⚙️</span>
+      <span class="label">Options</span>
+    </button>
+    <button class="action-btn" id="faq-btn">
+      <span class="icon">💡</span>
+      <span class="label">What is Location Guard?</span>
+    </button>
+  </div>
+</div>
+
+<!-- Level flyout -->
+<div id="level-flyout">
+  <div id="flyout-header">
+    <button id="flyout-back">‹</button>
+    <span id="flyout-title">Set level for</span>
+    <span id="flyout-domain"></span>
+  </div>
+  <div id="flyout-levels">
+    <button class="flyout-level-btn" data-level="fixed">
+      <span class="icon">📍</span>
+      <span class="info"><div class="name">Fixed location</div><div class="desc">Always report a fixed spot</div></span>
+      <span class="check">✓</span>
+    </button>
+    <button class="flyout-level-btn" data-level="high">
+      <span class="icon">🔒</span>
+      <span class="info"><div class="name">High privacy</div><div class="desc">Large random offset (~10 km)</div></span>
+      <span class="check">✓</span>
+    </button>
+    <button class="flyout-level-btn" data-level="medium">
+      <span class="icon">🛡️</span>
+      <span class="info"><div class="name">Medium privacy</div><div class="desc">Moderate offset (~1 km)</div></span>
+      <span class="check">✓</span>
+    </button>
+    <button class="flyout-level-btn" data-level="low">
+      <span class="icon">🔓</span>
+      <span class="info"><div class="name">Low privacy</div><div class="desc">Small offset (~100 m)</div></span>
+      <span class="check">✓</span>
+    </button>
+    <button class="flyout-level-btn" data-level="real">
+      <span class="icon">📡</span>
+      <span class="info"><div class="name">Real location</div><div class="desc">No protection for this site</div></span>
+      <span class="check">✓</span>
+    </button>
+  </div>
+</div>
+
+<script src="js/common.js"></script>
+<script src="js/gui/popup-new.js"></script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Location Guard — Options</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="css/leaflet.css">
+  <link rel="stylesheet" href="css/leaflet-geocoder-mapzen.css">
+  <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:       #13151a; --bg2: #1a1d24; --bg3: #21252f; --bg4: #272c38;
+    --border:   #2a2f3d; --border2: #353b4d;
+    --accent:   #4f8ef7; --accent-d: #1a2540;
+    --red:      #e55353; --text: #dde1ed; --text2: #9aa0b8; --text3: #5d6480;
+    --sidebar-w: 220px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  html, body { height:100%; background:var(--bg); color:var(--text); font-family:var(--font); font-size:14px; line-height:1.5; overflow:hidden; }
+
+  /* Shell */
+  #shell { display:flex; height:100vh; }
+
+  /* Sidebar */
+  #sidebar { width:var(--sidebar-w); flex-shrink:0; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; }
+  #sidebar-logo { display:flex; align-items:center; gap:10px; padding:20px 18px 16px; border-bottom:1px solid var(--border); }
+  #sidebar-logo img { width:28px; height:28px; }
+  #sidebar-logo span { font-size:15px; font-weight:700; }
+  nav { padding:8px 0; flex:1; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:10px 18px; color:var(--text2); font-size:13.5px; font-weight:500; cursor:pointer; border:none; background:none; width:100%; text-align:left; font-family:var(--font); text-decoration:none; transition:background .12s, color .12s; }
+  .nav-item .ni { font-size:16px; width:22px; text-align:center; flex-shrink:0; }
+  .nav-item:hover { background:var(--bg3); color:var(--text); }
+  .nav-item.active { background:var(--accent-d); color:var(--accent); font-weight:600; }
+  #sidebar-footer { padding:12px 18px; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:6px; }
+
+  /* Content */
+  #content-area { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  #content-header { height:56px; display:flex; align-items:center; padding:0 28px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  #content-header h1 { font-size:16px; font-weight:700; }
+
+  /* Pages */
+  .page { display:none; flex:1; overflow-y:auto; flex-direction:column; }
+  .page.active { display:flex; }
+  .page-scroll { padding:28px; display:flex; flex-direction:column; gap:20px; flex:1; }
+  .page-map { overflow:hidden; }
+  .map-controls { padding:20px 28px; display:flex; flex-direction:column; gap:14px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .map-wrap { flex:1; position:relative; min-height:0; }
+  .map-wrap > div { position:absolute !important; inset:0; }
+
+  /* Cards */
+  .card { background:var(--bg2); border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+  .card-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--text3); padding:14px 16px 8px; }
+  .card-row { display:flex; align-items:center; padding:13px 16px; border-top:1px solid var(--border); gap:12px; }
+  .card-row:first-of-type { border-top:none; }
+  .row-label { flex:1; }
+  .row-label .sub { font-size:12px; color:var(--text2); margin-top:2px; }
+
+  /* Toggle */
+  .toggle { position:relative; width:38px; height:22px; flex-shrink:0; cursor:pointer; }
+  .toggle input { opacity:0; width:0; height:0; position:absolute; }
+  .toggle-track { position:absolute; inset:0; background:var(--border2); border-radius:22px; transition:background .2s; }
+  .toggle-track::after { content:''; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:var(--text3); transition:transform .2s, background .2s; }
+  .toggle input:checked + .toggle-track { background:var(--accent); }
+  .toggle input:checked + .toggle-track::after { transform:translateX(16px); background:#fff; }
+
+  /* Select */
+  select { appearance:none; -webkit-appearance:none; background:var(--bg3); border:1px solid var(--border2); border-radius:8px; color:var(--text); font-family:var(--font); font-size:13.5px; padding:9px 34px 9px 12px; cursor:pointer; width:100%; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235d6480'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; }
+  select:focus { outline:none; border-color:var(--accent); }
+
+  /* Buttons */
+  .btn { display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:8px; font-size:13px; font-weight:500; font-family:var(--font); cursor:pointer; border:1px solid var(--border2); background:var(--bg3); color:var(--text); transition:background .12s; text-decoration:none; white-space:nowrap; }
+  .btn:hover { background:var(--bg4); }
+  .btn-danger { color:var(--red); border-color:#3d1515; }
+  .btn-danger:hover { background:#1e1010; }
+  .btn-full { width:100%; justify-content:center; }
+
+  /* Level tabs */
+  .level-tabs { display:flex; gap:4px; background:var(--bg3); border:1px solid var(--border); border-radius:10px; padding:4px; }
+  .level-tab { flex:1; padding:7px 12px; border-radius:7px; border:none; background:transparent; color:var(--text2); font-family:var(--font); font-size:13px; font-weight:500; cursor:pointer; text-align:center; transition:background .12s, color .12s; }
+  .level-tab:hover { background:var(--bg4); color:var(--text); }
+  .level-tab.active { background:var(--accent); color:#fff; font-weight:600; }
+
+  /* Stats */
+  .stats-row { display:flex; gap:10px; }
+  .stat-box { flex:1; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px 14px; }
+  .stat-label { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:.06em; }
+  .stat-value { font-size:20px; font-weight:700; margin-top:2px; }
+  .stat-unit { font-size:12px; color:var(--text2); font-weight:400; margin-left:2px; }
+
+  /* Range */
+  .slider-group { display:flex; flex-direction:column; gap:6px; }
+  .slider-header { display:flex; justify-content:space-between; font-size:12px; color:var(--text2); }
+  input[type=range] { -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:2px; background:var(--border2); outline:none; cursor:pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 3px rgba(79,142,247,.2); }
+  input[type=range]::-moz-range-thumb { width:18px; height:18px; border-radius:50%; background:var(--accent); border:none; }
+
+  /* Map notice */
+  .map-notice { display:flex; align-items:center; gap:8px; padding:10px 14px; background:var(--accent-d); border:1px solid #2a3d6e; border-radius:8px; font-size:12.5px; color:var(--text2); }
+
+  /* Toast */
+  #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(60px); background:var(--bg4); border:1px solid var(--border2); border-radius:8px; padding:10px 20px; font-size:13px; transition:transform .25s; pointer-events:none; z-index:9999; }
+  #toast.show { transform:translateX(-50%) translateY(0); }
+
+  /* Leaflet dark */
+  .leaflet-container { background:var(--bg2) !important; font-family:var(--font) !important; }
+  .leaflet-bar a { background:var(--bg2) !important; color:var(--text) !important; border-color:var(--border2) !important; }
+  .leaflet-bar a:hover { background:var(--bg3) !important; }
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip { background:var(--bg2) !important; color:var(--text) !important; border:1px solid var(--border2) !important; box-shadow:0 8px 24px rgba(0,0,0,.5) !important; }
+  .leaflet-popup-content { color:var(--text); font-size:13px; line-height:1.5; }
+  .leaflet-popup-close-button { color:var(--text2) !important; }
+  .leaflet-control-geocoder { background:var(--bg2) !important; border-color:var(--border2) !important; }
+  .leaflet-control-geocoder input { background:var(--bg3) !important; color:var(--text) !important; border:1px solid var(--border2) !important; border-radius:6px !important; }
+  .leaflet-control-geocoder-alternatives { background:var(--bg2) !important; }
+  .leaflet-control-locate a { background:var(--bg2) !important; color:var(--text) !important; }
+
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
+  </style>
+</head>
+<body>
+<div id="shell">
+
+  <aside id="sidebar">
+    <div id="sidebar-logo">
+      <img src="images/pin_64.png" alt="">
+      <span>Location Guard</span>
+    </div>
+    <nav>
+      <button class="nav-item active" data-page="options"><span class="ni">⚙️</span>Options</button>
+      <button class="nav-item" data-page="levels"><span class="ni">🛡️</span>Privacy Levels</button>
+      <button class="nav-item" data-page="fixedPos"><span class="ni">📍</span>Fixed Location</button>
+      <a class="nav-item" href="faq.html#general"><span class="ni">💡</span>FAQ</a>
+      <a class="nav-item" href="demo.html"><span class="ni">🗺️</span>Demo</a>
+    </nav>
+    <div id="sidebar-footer">
+      <button class="btn btn-danger btn-full" id="btn-delete-cache">🗑 Clear location cache</button>
+      <button class="btn btn-full" id="btn-restore">↺ Restore defaults</button>
+    </div>
+  </aside>
+
+  <div id="content-area">
+    <div id="content-header"><h1 id="page-title">Options</h1></div>
+
+    <!-- OPTIONS -->
+    <div class="page active" id="pg-options">
+      <div class="page-scroll">
+        <div class="card">
+          <div class="card-title">Default protection level</div>
+          <div class="card-row">
+            <select id="defaultLevel">
+              <option value="fixed">📍  Fixed location</option>
+              <option value="high">🔒  High privacy</option>
+              <option value="medium">🛡️  Medium privacy</option>
+              <option value="low">🔓  Low privacy</option>
+              <option value="real">📡  Real location (no protection)</option>
+            </select>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Behaviour</div>
+          <div class="card-row">
+            <div class="row-label"><div>Pause protection</div><div class="sub">Temporarily disable for all sites</div></div>
+            <label class="toggle"><input type="checkbox" id="paused"><div class="toggle-track"></div></label>
+          </div>
+          <div class="card-row" id="row-hide-icon" style="display:none">
+            <div class="row-label"><div>Hide icon</div><div class="sub">Don't show the toolbar icon</div></div>
+            <label class="toggle"><input type="checkbox" id="hideIcon"><div class="toggle-track"></div></label>
+          </div>
+          <div class="card-row">
+            <div class="row-label"><div>Update reported accuracy</div><div class="sub">Adapt accuracy to reflect the added noise</div></div>
+            <label class="toggle"><input type="checkbox" id="updateAccuracy"><div class="toggle-track"></div></label>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">About</div>
+          <div class="card-row">
+            <div class="row-label"><div>What is Location Guard?</div><div class="sub">Learn how the extension works</div></div>
+            <a class="btn" href="faq.html#general">Open FAQ</a>
+          </div>
+          <div class="card-row">
+            <div class="row-label"><div>Report an issue</div><div class="sub">Found a bug? Let us know on GitHub</div></div>
+            <button class="btn" id="btn-report">GitHub ↗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEVELS -->
+    <div class="page page-map" id="pg-levels">
+      <div class="map-controls">
+        <div class="level-tabs">
+          <button class="level-tab" data-level="low">🔓 Low</button>
+          <button class="level-tab active" data-level="medium">🛡️ Medium</button>
+          <button class="level-tab" data-level="high">🔒 High</button>
+        </div>
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-label">Protection radius</div><div class="stat-value"><span id="radius">—</span><span class="stat-unit">m</span></div></div>
+          <div class="stat-box"><div class="stat-label">Reported accuracy</div><div class="stat-value"><span id="accuracy">—</span><span class="stat-unit">m</span></div></div>
+        </div>
+        <div class="slider-group">
+          <div class="slider-header"><span>Protection radius</span><span>40 m → 3 km</span></div>
+          <input type="range" id="setRadius" min="40" max="3000" step="20" value="500">
+        </div>
+        <div class="slider-group">
+          <div class="slider-header"><span>Cache location for</span><span id="cacheTime">—</span></div>
+          <input type="range" id="setCacheTime" min="0" max="69" step="1" value="10">
+        </div>
+      </div>
+      <div class="map-wrap"><div id="levelMap"></div></div>
+    </div>
+
+    <!-- FIXED POS -->
+    <div class="page page-map" id="pg-fixedPos">
+      <div class="map-controls">
+        <div class="map-notice">📍 Click on the map or drag the marker to set your fixed location.</div>
+        <div class="card-row" style="padding:0;background:none;border:none">
+          <div class="row-label"><div>Disable geolocation API entirely</div><div class="sub"><b>Warning:</b> also suppresses the permission dialog</div></div>
+          <label class="toggle"><input type="checkbox" id="fixedPosNoAPI"><div class="toggle-track"></div></label>
+        </div>
+        <a class="btn" href="faq.html#fixed" style="align-self:flex-start">💡 What is a fixed location?</a>
+      </div>
+      <div class="map-wrap"><div id="fixedPosMap"></div></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="js/common.js"></script>
+<script src="js/common-gui-loader.js"></script>
+<script src="js/options-new.js"></script>
+</body>
+</html>

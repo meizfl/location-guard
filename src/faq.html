@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Location Guard — FAQ</title>
+  <meta charset="utf-8">
+  <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #13151a; --bg2: #1a1d24; --bg3: #21252f; --bg4: #272c38;
+    --border: #2a2f3d; --border2: #353b4d;
+    --accent: #4f8ef7; --accent-d: #1a2540;
+    --text: #dde1ed; --text2: #9aa0b8; --text3: #5d6480;
+    --sidebar-w: 220px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  html, body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.6; }
+  #shell { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  #sidebar { width: var(--sidebar-w); flex-shrink: 0; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+  #sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 20px 18px 16px; border-bottom: 1px solid var(--border); }
+  #sidebar-logo img { width: 28px; height: 28px; }
+  #sidebar-logo span { font-size: 15px; font-weight: 700; }
+  nav { padding: 8px 0; flex: 1; overflow-y: auto; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 18px; color: var(--text2); font-size: 13.5px; font-weight: 500; cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: var(--font); text-decoration: none; transition: background .12s, color .12s; }
+  .nav-item .ni { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: var(--accent-d); color: var(--accent); font-weight: 600; }
+
+  /* Content */
+  #content { flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  #content-header { height: 56px; display: flex; align-items: center; padding: 0 28px; border-bottom: 1px solid var(--border); flex-shrink: 0; position: sticky; top: 0; background: var(--bg); z-index: 10; }
+  #content-header h1 { font-size: 16px; font-weight: 700; }
+  #content-body { padding: 28px; display: flex; flex-direction: column; gap: 8px; max-width: 800px; }
+
+  /* Accordion */
+  .faq-item { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .faq-q {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 16px 20px; cursor: pointer; font-size: 14.5px; font-weight: 600;
+    color: var(--text); transition: background .12s; user-select: none; list-style: none;
+  }
+  .faq-q:hover { background: var(--bg3); }
+  .faq-q::after { content: '›'; font-size: 20px; color: var(--text3); flex-shrink: 0; transition: transform .2s; line-height: 1; }
+  .faq-item.open .faq-q { background: var(--bg3); }
+  .faq-item.open .faq-q::after { transform: rotate(90deg); color: var(--accent); }
+  .faq-a {
+    display: none; padding: 0 20px 18px; border-top: 1px solid var(--border);
+    font-size: 13.5px; line-height: 1.7; color: var(--text2);
+  }
+  .faq-item.open .faq-a { display: block; }
+  .faq-a p { margin-top: 12px; }
+  .faq-a p:first-child { margin-top: 14px; }
+  .faq-a a { color: var(--accent); text-decoration: none; }
+  .faq-a a:hover { text-decoration: underline; }
+  .faq-a b { color: var(--text); }
+
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div id="shell">
+  <aside id="sidebar">
+    <div id="sidebar-logo">
+      <img src="images/pin_64.png" alt="">
+      <span>Location Guard</span>
+    </div>
+    <nav>
+      <a class="nav-item" href="options.html"><span class="ni">⚙️</span>Options</a>
+      <a class="nav-item" href="options.html#levels"><span class="ni">🛡️</span>Privacy Levels</a>
+      <a class="nav-item" href="options.html#fixedPos"><span class="ni">📍</span>Fixed Location</a>
+      <a class="nav-item active" href="faq.html"><span class="ni">💡</span>FAQ</a>
+      <a class="nav-item" href="demo.html"><span class="ni">🗺️</span>Demo</a>
+    </nav>
+  </aside>
+
+  <div id="content">
+    <div id="content-header"><h1>Frequently Asked Questions</h1></div>
+    <div id="content-body">
+
+      <div class="faq-item open" id="faq-general">
+        <div class="faq-q">What is Location Guard?</div>
+        <div class="faq-a">
+          <p>Websites can ask the browser for your location (via JavaScript). When they do so, the browser first asks your permission, and if you accept, it detects your location (typically by transmitting a list of available wifi access points to a geolocation provider such as Google Location Services, or via GPS if available) and gives it to the website.</p>
+          <p>Location Guard is a browser extension that intercepts this procedure. The permission dialog appears as usual, and you can still choose to deny. If you give permission, then Location Guard obtains your location and adds "random noise" to it, creating a fake location. Only the fake location is then given to the website.</p>
+          <p>To see Location Guard in action use <a href="demo.html">our demo page</a>, this <a href="https://browserleaks.com/geo" target="_blank">online demo</a>, a <a href="https://darksky.net/" target="_blank">geolocalized weather forecast</a>, or go to <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> / <a href="https://www.google.com/maps" target="_blank">Google Maps</a> and press the location button. When the website asks for your location you will see the extension icon, which also provides configuration options.</p>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq-privacy">
+        <div class="faq-q">What kind of privacy does Location Guard provide?</div>
+        <div class="faq-a">
+          <p>Location Guard provides privacy within a certain <i>protection area</i> by ensuring that all locations within this area look <i>plausible</i> for being the real one. This is achieved by adding random noise in a way such that all locations within the protection area can produce the same fake location with similar probability. As a consequence, the fake location provides no information to the website for distinguishing between locations within the protection area.</p>
+          <p><b>Warning:</b> <i>background knowledge</i> can still be used by websites to guess the real location within the protection area. For instance, if the protection area is in the middle of a lake containing only a small island, it will be easy to infer that the real location is on the island. In scenarios like this you should choose a higher privacy level or deny disclosing your location at all.</p>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq-levels">
+        <div class="faq-q">What are "privacy levels"?</div>
+        <div class="faq-a">
+          <p>The privacy level determines the amount of noise added to your real location. A higher level adds more noise, so the fake location will be further away from the real one. This offers protection within a larger area, but it might make the service provided by the website less useful.</p>
+          <p>By default all websites use the "medium" level (this can be changed from the <a href="options.html">Options tab</a>). You can select a different level for a specific website using the extension icon. For instance, you could select a lower privacy level for websites that need an accurate location (e.g. maps), and a higher one for websites that only need approximate information (e.g. weather forecast).</p>
+          <p>For more flexibility, each level can be configured from the <a href="options.html#levels">Privacy Levels tab</a>. The red circle is the <i>protection area</i>: locations in this area look plausible to be the real one. The blue circle is the <i>accuracy</i>: the fake location will be inside this circle with high probability. Use the slider to adapt the two areas to your needs.</p>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq-fixed">
+        <div class="faq-q">What is a "fixed location"?</div>
+        <div class="faq-a">
+          <p>The privacy level can be set to "Use fixed location". In this case Location Guard always reports a predefined fixed location that never changes (instead of generating a fake location by adding noise to the real one). This offers the highest privacy, since the reported location is completely independent from the real one, at the cost of very low accuracy.</p>
+          <p>You can modify the fixed location from the <a href="options.html#fixedPos">Fixed Location tab</a>.</p>
+          <p>When using a fixed location, the browser's geolocation is not performed at all. This offers better privacy, since the list of wifi access points is not transmitted to Google's servers. However, it has the side effect that the <i>permission dialog is not displayed at all</i>. This behaviour can be modified if you wish.</p>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq-ip">
+        <div class="faq-q">Why some websites detect my location although I use Location Guard?</div>
+        <div class="faq-a">
+          <p>Some websites detect your location based on your <a href="https://en.wikipedia.org/wiki/IP_address" target="_blank">IP address</a> (a numerical label associated with every device on the Internet), which is visible to all websites you visit. However, most of the time this type of geolocation is <i>not accurate</i> and is limited to the city or postal/zip code level.</p>
+          <p>Location Guard does not protect your IP address; it hides the location revealed by the browser through the JavaScript API, which is usually <i>very accurate</i>. To hide your IP address you need to use an anonymous communication system such as <a href="https://www.torproject.org/" target="_blank">Tor</a>.</p>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq-info">
+        <div class="faq-q">How Location Guard uses my information?</div>
+        <div class="faq-a">
+          <p>Location Guard takes your privacy seriously! The extension has no "special permission" to access your location — it can obtain it only when a website asks for it and only if you allow access in the permission dialog.</p>
+          <p>Location Guard runs locally in your browser and <i>sends no information</i> whatsoever to the network. It only communicates your fake location to the website that asks for it.</p>
+          <p>Location Guard also never stores your real location. The <i>fake</i> location is cached for a small period of time to improve privacy by avoiding generating too many fake locations centered around the real one. The cache period can be configured from the <a href="options.html#levels">Privacy Levels tab</a> and the cache can be deleted from the <a href="options.html">Options tab</a>.</p>
+        </div>
+      </div>
+
+      <div class="faq-item" id="faq-technology">
+        <div class="faq-q">What is the technology behind Location Guard?</div>
+        <div class="faq-a">
+          <p>Location Guard is a product of research carried out at the Ecole Polytechnique of Paris, CNRS and Inria. It is based on work by <a href="https://www.lix.polytechnique.fr/~mandres" target="_blank">Miguel Andrés</a>, <a href="https://www.nbordenabe.me/" target="_blank">Nicolás Bordenabe</a>, <a href="https://www.chatzi.org/" target="_blank">Kostas Chatzikokolakis</a>, <a href="https://www.lix.polytechnique.fr/~catuscia/" target="_blank">Catuscia Palamidessi</a> and <a href="http://www.stronati.org/" target="_blank">Marco Stronati</a>.</p>
+          <p>Location Guard implements a <a href="https://en.wikipedia.org/wiki/Location_obfuscation" target="_blank">location obfuscation</a> technique based on adding noise from a 2-dimensional <a href="https://en.wikipedia.org/wiki/Laplace_distribution" target="_blank">Laplace distribution</a>. This method provides a privacy guarantee which is a variant of <a href="https://en.wikipedia.org/wiki/Differential_privacy" target="_blank">Differential Privacy</a>.</p>
+          <p><b>Geo-Indistinguishability: Differential Privacy for Location-Based Systems</b>.<br>
+          M. Andres, N. Bordenabe, K. Chatzikokolakis and C. Palamidessi.<br>
+          <i>Proc. ACM CCS '13</i>, pp. 901–914, 2013. [<a href="https://arxiv.org/abs/1212.1984" target="_blank">report version</a>]</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+<script src="js/faq-new.js"></script>
+</body>
+</html>

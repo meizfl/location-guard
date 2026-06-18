@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Location Guard — Demo</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="css/leaflet.css">
+  <style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #13151a; --bg2: #1a1d24; --bg3: #21252f; --bg4: #272c38;
+    --border: #2a2f3d; --border2: #353b4d;
+    --accent: #4f8ef7; --accent-d: #1a2540;
+    --text: #dde1ed; --text2: #9aa0b8; --text3: #5d6480;
+    --sidebar-w: 220px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; overflow: hidden; }
+  #shell { display: flex; height: 100vh; }
+
+  /* Sidebar */
+  #sidebar { width: var(--sidebar-w); flex-shrink: 0; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+  #sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 20px 18px 16px; border-bottom: 1px solid var(--border); }
+  #sidebar-logo img { width: 28px; height: 28px; }
+  #sidebar-logo span { font-size: 15px; font-weight: 700; }
+  nav { padding: 8px 0; flex: 1; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 18px; color: var(--text2); font-size: 13.5px; font-weight: 500; cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: var(--font); text-decoration: none; transition: background .12s, color .12s; }
+  .nav-item .ni { font-size: 16px; width: 22px; text-align: center; flex-shrink: 0; }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: var(--accent-d); color: var(--accent); font-weight: 600; }
+
+  /* Content */
+  #content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  #content-header { height: 56px; display: flex; align-items: center; padding: 0 28px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  #content-header h1 { font-size: 16px; font-weight: 700; }
+
+  /* Map */
+  #map-wrap { flex: 1; position: relative; }
+  #demoMap { position: absolute; inset: 0; }
+
+  /* Tour card */
+  #tour-card {
+    position: absolute; z-index: 1000;
+    top: 50%; left: 50%; transform: translate(-50%, -50%);
+    background: var(--bg2); border: 1px solid var(--border2);
+    border-radius: 14px; padding: 28px;
+    width: 360px; max-width: calc(100vw - var(--sidebar-w) - 40px);
+    box-shadow: 0 20px 60px rgba(0,0,0,.6);
+  }
+  #tour-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+  #tour-body { font-size: 13.5px; line-height: 1.65; color: var(--text2); }
+  #tour-body p { margin-top: 8px; }
+  #tour-body p:first-child { margin-top: 0; }
+  #tour-body b { color: var(--text); }
+  #tour-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 20px; }
+  #tour-dots { display: flex; gap: 6px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); transition: background .2s; }
+  .dot.active { background: var(--accent); }
+  #tour-actions { display: flex; gap: 8px; align-items: center; }
+  #tour-close { background: none; border: none; color: var(--text3); font-size: 13px; cursor: pointer; padding: 4px 8px; font-family: var(--font); }
+  #tour-close:hover { color: var(--text2); }
+  #tour-next {
+    background: var(--accent); color: #fff; border: none; border-radius: 8px;
+    padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: var(--font); transition: background .12s, opacity .15s;
+  }
+  #tour-next:hover:not(:disabled) { background: #3a7aee; }
+
+  /* Leaflet dark */
+  .leaflet-container { background: #1a2030 !important; font-family: var(--font) !important; }
+  .leaflet-bar a { background: var(--bg2) !important; color: var(--text) !important; border-color: var(--border2) !important; }
+  .leaflet-bar a:hover { background: var(--bg3) !important; }
+  .leaflet-control-locate a { background: var(--bg2) !important; color: var(--text) !important; }
+  .leaflet-control-attribution { background: rgba(19,21,26,.7) !important; color: var(--text3) !important; }
+  .leaflet-control-attribution a { color: var(--text3) !important; }
+  </style>
+</head>
+<body>
+<div id="shell">
+  <aside id="sidebar">
+    <div id="sidebar-logo">
+      <img src="images/pin_64.png" alt="">
+      <span>Location Guard</span>
+    </div>
+    <nav>
+      <a class="nav-item" href="options.html"><span class="ni">⚙️</span>Options</a>
+      <a class="nav-item" href="options.html#levels"><span class="ni">🛡️</span>Privacy Levels</a>
+      <a class="nav-item" href="options.html#fixedPos"><span class="ni">📍</span>Fixed Location</a>
+      <a class="nav-item" href="faq.html"><span class="ni">💡</span>FAQ</a>
+      <a class="nav-item active" href="demo.html"><span class="ni">🗺️</span>Demo</a>
+    </nav>
+  </aside>
+
+  <div id="content">
+    <div id="content-header"><h1>Location Guard Demo</h1></div>
+    <div id="map-wrap">
+      <div id="demoMap"></div>
+
+      <!-- Tour card overlay -->
+      <div id="tour-card">
+        <div id="tour-title"></div>
+        <div id="tour-body"></div>
+        <div id="tour-footer">
+          <div id="tour-dots"></div>
+          <div id="tour-actions">
+            <button id="tour-close">Close</button>
+            <button id="tour-next">Next →</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- content.js must run in page context for demo to work -->
+<script src="js/common.js"></script>
+<script src="js/common-gui-loader.js"></script>
+<script src="js/content/content.js"></script>
+<script src="js/demo-new.js"></script>
+</body>
+</html>

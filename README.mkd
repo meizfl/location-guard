@@ -1,6 +1,6 @@
-# Location Guard
+# Location Guard Reforged
 
-**Location Guard** is a browser extension that allows to protect your location
+**Location Guard Reforged** is a new version of browser extension that allows to protect your location
 while using location-aware websites, by adding controlled noise to it.
 It supports the followng browsers:
 

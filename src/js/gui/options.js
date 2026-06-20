@@ -1,12 +1,20 @@
-(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 
 const $ = require('jquery');
 require('sglide');		// extends jquery
 
-// Requiring the plugins extends Leaflet automatically
-const L = require('leaflet');
-require('pelias-leaflet-plugin');
-require('leaflet.locatecontrol');
+// Leaflet 2.0: no more global L factory functions / L.control.* namespace.
+// Import the classes we use directly and construct them with `new`.
+const { Map: LeafletMap, TileLayer, Marker, Popup, Circle, LatLng } = require('leaflet');
+
+// leaflet.locatecontrol >= 0.86 ships an ESM build exporting `LocateControl`
+// and a `locate(options)` factory directly (no more `L.Control.Locate` patching).
+const { LocateControl, locate } = require('leaflet.locatecontrol');
+
+// pelias-leaflet-plugin's main entry (src/index.js) still tries to patch the
+// removed `L.control.geocoder` namespace, which throws under Leaflet 2.0.
+// Its actual Geocoder class lives in src/core.js and has no such dependency,
+// so we import that directly and skip the broken wrapper.
+const Geocoder = require('pelias-leaflet-plugin/src/core');
 
 const Browser = require('../common/browser');
 const PlanarLaplace = require('../common/laplace');
@@ -114,8 +122,8 @@ function initLevelMap() {
 	var latlng = [currentPos.latitude, currentPos.longitude];
 
 	// map
-	levelMap = L.map('levelMap')
-		.addLayer(new L.TileLayer(
+	levelMap = new LeafletMap('levelMap')
+		.addLayer(new TileLayer(
 			Browser.gui.mapTiles().url,
 			Browser.gui.mapTiles().info,
 		))
@@ -124,7 +132,7 @@ function initLevelMap() {
 			levelMap.closePopup();
 		})
 		.on('click', function(e){
-			if(levelMap.popup._isOpen) {	// if popup is open, close it
+			if(levelMap.popup.isOpen()) {	// if popup is open, close it
 				levelMap.closePopup();
 				return;
 			}
@@ -132,7 +140,7 @@ function initLevelMap() {
 		});
 
 	// marker
-	levelMap.marker = new L.marker(latlng, { draggable: true })
+	levelMap.marker = new Marker(latlng, { draggable: true })
 		.addTo(levelMap)
 		.on('click', function() {
 			showPopup(levelMap);
@@ -148,7 +156,7 @@ function initLevelMap() {
 			'to show your current location.</p>' +
 		'</div>';
 
-	levelMap.popup = L.popup({
+	levelMap.popup = new Popup({
 			autoPan: false,
 			closeOnClick: false,		// we'll close it ourselves
 			maxWidth: Math.min($("#levelMap").width() - 50, 300),
@@ -156,7 +164,7 @@ function initLevelMap() {
 		.setContent(popupHtml);
 
 	// circles (accuracy circle first to be on bottom)
-	levelMap.accuracy = new L.Circle(latlng, 1500, {
+	levelMap.accuracy = new Circle(latlng, 1500, {
 			color: null,
 			fillColor: 'blue',
 			fillOpacity: 0.4,
@@ -164,7 +172,7 @@ function initLevelMap() {
 		})
 		.addTo(levelMap);
 
-	levelMap.protection = new L.Circle(latlng, 500, {
+	levelMap.protection = new Circle(latlng, 500, {
 			color: null,
 			fillColor: '#f03',
 			fillOpacity: 0.4,
@@ -175,7 +183,7 @@ function initLevelMap() {
 	// extend the Locate control and override the "start" method, so that it sets the marker to the user's location
 	// see https://github.com/domoritz/leaflet-locatecontrol
 	//
-	var myLocate = L.Control.Locate.extend({
+	var myLocate = LocateControl.extend({
 	   start: showCurrentPosition
 	});
 	new myLocate({
@@ -186,7 +194,7 @@ function initLevelMap() {
 
 	// geocoder control
 	if(!Browser.capabilities.isAndroid()) // not enough space on smartphones, better have a cleaner interface
-		L.control.geocoder(geocoderKey, {
+		new Geocoder(geocoderKey, {
         	url: geocoderUrl,
 			markers: false,
 			autocomplete: false
@@ -199,8 +207,8 @@ async function initFixedPosMap() {
 	const st = await Browser.storage.get();
 	var latlng = [st.fixedPos.latitude, st.fixedPos.longitude];
 
-	fixedPosMap = new L.map('fixedPosMap')
-		.addLayer(new L.TileLayer(
+	fixedPosMap = new LeafletMap('fixedPosMap')
+		.addLayer(new TileLayer(
 			Browser.gui.mapTiles().url,
 			Browser.gui.mapTiles().info,
 		))
@@ -209,7 +217,7 @@ async function initFixedPosMap() {
 			fixedPosMap.closePopup();
 		})
 		.on('click', function(e) {
-			if(fixedPosMap.popup._isOpen) {	// if popup is open, close it
+			if(fixedPosMap.popup.isOpen()) {	// if popup is open, close it
 				fixedPosMap.closePopup();
 				return;
 			}
@@ -217,7 +225,7 @@ async function initFixedPosMap() {
 		});
 
 	// marker
-	fixedPosMap.marker = new L.marker(latlng, { draggable: true })
+	fixedPosMap.marker = new Marker(latlng, { draggable: true })
 		.addTo(fixedPosMap)
 		.on('click', function() {
 			showPopup(fixedPosMap);
@@ -233,7 +241,7 @@ async function initFixedPosMap() {
 			'<p>Click on the map or drag the marker to set a new fixed location.</p>' +
 		'</div>';
 
-	fixedPosMap.popup = L.popup({
+	fixedPosMap.popup = new Popup({
 			autoPan: false,
 			closeOnClick: false,		// we'll close it ourselves
 			maxWidth: Math.min($("#fixedPosMap").width() - 50, 300),
@@ -243,7 +251,7 @@ async function initFixedPosMap() {
 	showPopup(fixedPosMap);
 
 	// locate control
-	L.control.locate({
+	locate({
 		drawCircle: false,
 		follow: false,
 		icon: 'icon-trans ui-btn-icon-notext ui-icon-location',				// use jqm's icons to avoid loading
@@ -252,7 +260,7 @@ async function initFixedPosMap() {
 
 	// geocoder control
 	if(!Browser.capabilities.isAndroid()) // not enough space on smartphones, better have a cleaner interface
-		L.control.geocoder(geocoderKey, {
+		new Geocoder(geocoderKey, {
 			url: geocoderUrl,
 			markers: false,
 			autocomplete: false
@@ -261,7 +269,7 @@ async function initFixedPosMap() {
 			var res = e.params.text.match(/^([-+]?[0-9]+\.[0-9]+)\s*,?\s*([-+]?[0-9]+\.[0-9]+)$/);
 			if(!res) return;
 
-			var latlng = L.latLng(parseFloat(res[1]), parseFloat(res[2]));
+			var latlng = new LatLng(parseFloat(res[1]), parseFloat(res[2]));
 			saveFixedPos(latlng);
 			fixedPosMap.setView(latlng, 14)
 			this.collapse();		// close the geocoder search
@@ -509,4 +517,3 @@ $(document).ready(function() {
 	const res = await Browser.rpc.call(null, 'nestedTestMain', []);
 	Browser.log('got from nestedTestMain', res);
 }());
-},{"../common/browser":"/src/js/common/browser.js","../common/laplace":"/src/js/common/laplace.js","jquery":"jquery","leaflet":"leaflet","leaflet.locatecontrol":"leaflet.locatecontrol","pelias-leaflet-plugin":"pelias-leaflet-plugin","sglide":"sglide"}]},{},[1]);

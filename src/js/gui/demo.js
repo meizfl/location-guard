@@ -1,9 +1,14 @@
-(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 
 const $ = require('jquery');
 const introJs = require('intro.js');
-const L = require('leaflet');
-require('leaflet.locatecontrol');
+
+// Leaflet 2.0: no more global L factory functions (L.map, L.marker, ...).
+// Import the classes we actually use, and construct them with `new`.
+const { Map: LeafletMap, TileLayer, Marker, Circle } = require('leaflet');
+
+// Leaflet 2.0: leaflet.locatecontrol >= 0.86 ships an ESM build exporting
+// the `LocateControl` class directly (no more `L.Control.Locate` patching).
+const { LocateControl } = require('leaflet.locatecontrol');
 
 const Browser = require('../common/browser');
 
@@ -25,8 +30,8 @@ $(document).ready(function() {
 	});
 
 	// setup map
-	demoMap = new L.map('demoMap')
-		.addLayer(new L.TileLayer(
+	demoMap = new LeafletMap('demoMap')
+		.addLayer(new TileLayer(
 			Browser.gui.mapTiles().url,
 			Browser.gui.mapTiles().info,
 		))
@@ -38,7 +43,7 @@ $(document).ready(function() {
 	// extend the Locate control and override the "start" method, so that it sets the marker to the user's location
 	// see https://github.com/domoritz/leaflet-locatecontrol
 	//
-	var myLocate = L.Control.Locate.extend({
+	var myLocate = LocateControl.extend({
 	   start: showCurrentPosition
 	});
 	new myLocate({
@@ -82,10 +87,10 @@ async function drawPosition(pos) {
 	var acc = pos.coords.accuracy;
 
 	if(!demoMap.marker) {
-		demoMap.marker = new L.marker(latlng)
+		demoMap.marker = new Marker(latlng)
 			.addTo(demoMap);
 
-		demoMap.accuracy = new L.Circle(latlng, acc, {
+		demoMap.accuracy = new Circle(latlng, acc, {
 				color: '#136AEC',
 				fillColor: '#136AEC',
 				fillOpacity: 0.15,
@@ -177,5 +182,3 @@ function startDemo() {
 	})
 	.start();
 }
-
-},{"../common/browser":"/src/js/common/browser.js","intro.js":"intro.js","jquery":"jquery","leaflet":"leaflet","leaflet.locatecontrol":"leaflet.locatecontrol"}]},{},[1]);
